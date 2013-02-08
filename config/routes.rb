@@ -1,5 +1,11 @@
 Songsaboutsnow::Application.routes.draw do
+  #ActiveAdmin.routes(self)
+
+  #devise_for :admin_users, ActiveAdmin::Devise.config
+
   resources :public_pages, only: [:index]
+  match '105' => 'static_pages#one_oh_five'
+  #resources :lyrics
   # The priority is based upon order of creation:
   # first created -> highest priority.
 
