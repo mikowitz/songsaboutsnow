@@ -11,6 +11,8 @@
 /db/*.sqlite3
 /config/database.yml
 
+/public/*.tex
+
 # Ignore all logfiles and tempfiles.
 /log/*.log
 /tmp
