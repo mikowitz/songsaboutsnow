@@ -1,0 +1,47 @@
+pre {
+  white-space: 'pre-wrap';
+  font-family: monospace;
+  color: #fff;
+  background-color: #000;
+  font-size: 1.5em;
+}
+
+body {
+  font-family: monospace;
+  color: #fff;
+  background-color: #000;
+}
+.comment {
+  color: #aaa;
+  a {
+    color: #aaa;
+    &:hover {
+      color: #000;
+      background-color: #aaa;
+    }
+  }
+}
+.function { color: #af5f00; }
+.identifier, .constant { color: #0ff; }
+.keyword  { color: #8080ff; }
+.pre-proc { color: #8080ff; }
+.statement { color: #5fd7ff; }
+.string {
+  a {
+    color: #0c0;
+    &:hover {
+      color: #000;
+      background-color: #0c0;
+    }
+  }
+  &:before {
+    content: "'";
+    color: #87ffaf;
+  }
+  &:after {
+    content: "'";
+    color: #87ffaf;
+  }
+}
+
+.type     { color: #ffff00; } 
