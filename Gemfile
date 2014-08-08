@@ -5,5 +5,4 @@ gem 'sinatra'
 gem 'sinatra-asset-snack'
 
 gem 'shotgun'
-gem 'haml'
 gem 'sass'
