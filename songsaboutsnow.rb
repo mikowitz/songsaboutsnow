@@ -7,4 +7,18 @@ class Songsaboutsnow < Sinatra::Base
   get '/' do
     send_file 'views/index.html'
   end
+
+  get "/penguins" do
+    haml :penguins
+  end
+
+  #get "/test" do
+    #@poetry_links = {
+      #"One Sentence Poems" => "http://onesentencepoems.com/osp/michael-berkowitz-the-restored-typewriter/",
+      #"The Rampallian" => "http://www.magcloud.com/browse/issue/804364",
+      #"Eunoia Review" => "https://eunoiareview.wordpress.com/tag/michael-berkowitz",
+      #"Sixfold" => "http://www.sixfold.org/PoWinter13/Berkowitz.html"
+    #}
+    #haml :test
+  #end
 end

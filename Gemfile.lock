@@ -6,6 +6,8 @@ GEM
       execjs
     coffee-script-source (1.6.3)
     execjs (2.0.2)
+    haml (4.0.5)
+      tilt
     mime-types (2.1)
     rack (1.5.2)
     rack-protection (1.5.2)
@@ -28,6 +30,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  haml
   sass
   shotgun
   sinatra
