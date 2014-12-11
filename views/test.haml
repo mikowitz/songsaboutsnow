@@ -1,0 +1,85 @@
+!!!html
+%html
+  %head
+    %title Michael Berkowitz
+    %link(href="/styles/application.css" rel="stylesheet" type="text/css")
+
+  %body
+    %pre
+      %span.keyword<> class
+      %span.type<> Michael
+      %span<> &lt;
+      %span.type<> Berkowitz
+
+      %br
+
+      %span.indent.pre-proc<> def
+      %span.function<> initialize
+
+      %br
+
+      %span.indent-2x.identifier<> @writing
+      %span<> = {
+      %br
+      
+      %span.indent-3x.constant<> poetry
+      %span<> : [
+
+      %br
+
+      - @poetry_links.each_with_index do |(journal_name, link), index|
+        %span.indent-4x.string<>
+          %a{href: link}<>= journal_name
+        - if index < @poetry_links.count - 1
+          %span<> ,
+        %br
+
+      %span.indent-3x<> ],
+
+      %br
+
+      %span.indent-3x.constant<> songs
+      %span :
+      %span.string<>
+        %a(href="http://www.reverbnation.com/michaelberkowitz") ReverbNation
+      %span<> ,
+
+      %br
+
+      %span.indent-3x.constant<> code
+      %span :
+      %span.string<>
+        %a(href="http://www.github.com/mikowitz") GitHub
+
+      %br
+
+      %span.indent-2x<> }
+
+      %br
+
+      %span.indent-2x.identifier<> @work
+      %span<> =
+      %span.string<>
+        %a(href="http://www.meyouhealth.com") MeYou Health
+
+      %br
+
+      %span.indent-2x.identifier<> @twitter
+      %span<> =
+      %span.string<>
+        %a(href="http://www.twitter.com/hal678") @hal678
+
+      %br
+
+      %span.indent.keyword<> end
+
+      %br
+
+      %span.keyword<> end
+
+      %br
+      %br
+
+      %span.comment<>
+        \# design inspired by&nbsp; 
+        %a(href="http://semanticart.com")<> Jeffrey Chupp

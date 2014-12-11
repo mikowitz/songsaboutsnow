@@ -4,12 +4,48 @@ pre {
   color: #fff;
   background-color: #000;
   font-size: 1.5em;
+  margin-left: 10px;
 }
 
 body {
   font-family: monospace;
   color: #fff;
   background-color: #000;
+}
+span {
+  &:after {
+    content: " ";
+  }
+
+  &.indent {
+    &:before {
+      content: "  ";
+    }
+  }
+
+  &.indent-2x {
+    &:before {
+      content: "    ";
+    }
+  }
+
+  &.indent-3x {
+    &:before {
+      content: "      ";
+    }
+  }
+
+  &.indent-4x {
+    &:before {
+      content: "        ";
+    }
+    
+    &.string {
+      &:before {
+        content: "        \"";
+      }
+    }
+  }
 }
 .comment {
   color: #aaa;
