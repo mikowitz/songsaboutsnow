@@ -6,6 +6,7 @@ class Songsaboutsnow < Sinatra::Base
   asset_map "/styles/application.css", ["assets/css/*.scss"]
   get "/" do
     @poetry_links = {
+      "Hermes Poetry Journal" => "http://windlee.wix.com/hermespoetry#!2014-p6/c1gt5",
       "One Sentence Poems" => "http://onesentencepoems.com/osp/michael-berkowitz-the-restored-typewriter/",
       "The Rampallian" => "http://www.magcloud.com/browse/issue/804364",
       "Eunoia Review" => "https://eunoiareview.wordpress.com/tag/michael-berkowitz",
