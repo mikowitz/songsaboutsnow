@@ -29,7 +29,7 @@
 
       - @poetry_links.each_with_index do |(journal_name, link), index|
         %span.indent-4x.string<>
-          %a{href: link}<>= journal_name
+          %a{href: link, target: "_blank"}<>= journal_name
         - if index < @poetry_links.count - 1
           %span<> ,
         %br
