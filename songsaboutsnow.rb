@@ -7,7 +7,7 @@ class Songsaboutsnow < Sinatra::Base
   get "/" do
     @poetry_links = {
       "Right Hand Pointing" => "http://www.righthandpointing.net/#!86-michael-berkowitz/cmko",
-      "The Journal of the Hemlock Homebrewing Society" => "http://hemlockhomebrew.tumblr.com/post/117811898238/check-out-the-inaugural-issue-of-the-journal-of",
+      "The Journal of the Hemlock Homebrewing Society" => "http://issuu.com/hemlockhomebrew/docs/hemlock_homebrew__1",
       "Tinderbox Poetry" => "http://www.tinderboxpoetry.com/emily-twelve-years-later",
       "Hermes Poetry Journal" => "http://windlee.wix.com/hermespoetry#!2014-p6/c1gt5",
       "One Sentence Poems" => "http://onesentencepoems.com/osp/michael-berkowitz-the-restored-typewriter/",
