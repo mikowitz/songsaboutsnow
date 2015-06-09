@@ -6,6 +6,7 @@ class Songsaboutsnow < Sinatra::Base
   asset_map "/styles/application.css", ["assets/css/*.scss"]
   get "/" do
     @poetry_links = {
+      "Quarterly West" => "http://quarterlywest.com/?p=2220",
       "Right Hand Pointing" => "http://www.righthandpointing.net/#!86-michael-berkowitz/cmko",
       "The Journal of the Hemlock Homebrewing Society" => "http://issuu.com/hemlockhomebrew/docs/hemlock_homebrew__1",
       "Tinderbox Poetry" => "http://www.tinderboxpoetry.com/emily-twelve-years-later",
