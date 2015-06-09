@@ -16,7 +16,7 @@ class Songsaboutsnow < Sinatra::Base
       "Eunoia Review" => "https://eunoiareview.wordpress.com/tag/michael-berkowitz",
       "Sixfold" => "http://www.sixfold.org/PoWinter13/Berkowitz.html"
     }
-    haml :test
+    haml :index
   end
 
   get "/penguins" do
