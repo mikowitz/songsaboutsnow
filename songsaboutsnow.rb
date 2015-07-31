@@ -6,6 +6,7 @@ class Songsaboutsnow < Sinatra::Base
   asset_map "/styles/application.css", ["assets/css/*.scss"]
   get "/" do
     @poetry_links = {
+      "Bird's Thumb" => "http://birdsthumb.org/july-2015/2015/6/29/indian-summer",
       "Quarterly West" => "http://quarterlywest.com/?p=2220",
       "Right Hand Pointing" => "http://www.righthandpointing.net/#!86-michael-berkowitz/cmko",
       "The Journal of the Hemlock Homebrewing Society" => "http://issuu.com/hemlockhomebrew/docs/hemlock_homebrew__1",
