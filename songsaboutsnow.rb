@@ -23,4 +23,8 @@ class Songsaboutsnow < Sinatra::Base
   get "/penguins" do
     haml :penguins
   end
+
+  get "/otters" do
+    haml :otters
+  end
 end
