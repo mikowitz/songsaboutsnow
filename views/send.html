@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <title>*markdown-output*</title>
+
+    </head>
+
+    <body>
+
+        <h2>(The) Space (of software development) is big. Really big.</h2>
+
+        <p>And because of how vastly, hugely, mind-bogglingly big it is, you just can’t have all of it in your head all of the time. So patterns develop, and someone blogs about them, and someone else copies it from that blog into their code and tweaks it just enough so that it does what they, specifically, want, but maybe, just maybe, they don’t fully understand how or even <em>why</em> it does what they, specifically, want.</p>
+
+        <p>Now, of course, the “they” in that previous scenario is often me, and, probably, you, at least once in your life. And if you’re not a programmer, the same things applies to any language. I spent many years knowing what “chassis” and “chitin” meant, and how I’d use them in my own YA dystopian novels, but I had no idea how to pronounce them, because I read books instead of talking to people. (whether you took the verb “read” as past or present tense in the previous sentence, you’re right).</p>
+
+        <p>One of these patterns that I’ve been playing around with lately is basic processes in Elixir, particularly their <code>send</code> and <code>receive</code> paradigm. Fortunately, I’ve never had to implement one in a production setting, and my current reason to learn this is to play around with building some algorithmic composition tools, so even a production setting’s going to have a very small audience, but still. After a while of having to look up that one version of the pattern I found on that one blog that one time, it starts to feel like maybe I could just buckle down and figure out how to do this myself.</p>
+
+        <p>My goal for the rest of this is threefold:</p>
+
+        <ol>
+            <li>By writing this down and explaining my thought process, finally understand how all these pieces work</li>
+            <li>By writing this down and explaining my thought process, help you understand how all these pieces work</li>
+            <li>Provide clear enough content to be my own “that one version of the pattern I found on that one blog post” (and maybe yours, if you feel the need to come back and visit)</li>
+        </ol>
+
+        <p>We’re going to start with a simple example I found as a now-do-it-yourself example in Dave Thomas' excellent <a href="https://pragprog.com/book/elixir12/programming-elixir-1-2">Programming Elixir</a>:</p>
+
+        <p>“Write a program that spawns two processes and then passes each a unique token. Have them send the tokens back.”</p>
+
+        <p>If you’re following along, type or copy the following code into “echo.ex”</p>
+
+        <pre><code>defmodule Echo do
+  def listen do
+    receive do
+      {sender, token} -&gt; send sender, {self, token}
+    end
+  end
+
+  def run(token1, token2) do
+    pid1 = spawn(Echo, :listen, [])
+    pid2 = spawn(Echo, :listen, [])
+
+    send pid1, {self, token1}
+    send pid2, {self, token2}
+
+    receive do
+      {^pid1, token} -&gt; IO.puts token
+    end
+    receive do
+      {^pid2, token} -&gt; IO.puts token
+    end
+  end
+end
+        </code></pre>
+
+        <p>Then, fire up iEX and run:</p>
+
+        <pre><code>iex&gt; c(“echo.ex”)
+[Echo]
+iex&gt; Echo.run(“Dear”, “Reader”)
+Dear
+Reader
+:ok
+        </code></pre>
+
+        <p>Let’s walk through this code quickly to see what’s going on here.</p>
+
+        <ol>
+            <li><p>In the first two lines of <code>run</code> we <code>spawn</code> two new processes. In Elixir, spawn has two possible function signatures: <code>spawn/1</code> and <code>spawn/3</code>.
+                <code>spawn/3</code>, which we use here, takes as its arguments a module, the name of a function on that module, and a list of arguments.
+                It spawns a new process running that function, and returns that process’s process identifier (PID).
+                Here we are spawning two processes, each running <code>Echo.listen()</code></p></li>
+            <li><p>Jumping to the definition of <code>listen</code>, we see it defines only a <code>receive</code> block. <code>receive</code> is an Elixir macro that works, for our intentions here, exactly as the <code>case</code> statement.
+                It listens for messages being sent to its process, and, if one of its clauses matches the message, will perform the commands given.
+                If nothing matches, the block will hang indefinitely or until a provided timeout is reached (more on this later). So here we have a process listening for a two-element tuple.</p></li>
+            <li><p>Now let’s jump back into <code>run</code>. We have our processes running, and we have their PIDs saved as <code>pid1</code> and <code>pid2</code>.
+                Next we <code>send</code> each of those processes a message of the form <code>{self, token}</code>.
+                <code>send/2</code> takes as its first argument a destination, and the message as its secord argument.
+                <code>self</code> is a PID for the current process we are running in (IEx, in this case). As we saw above, this is exactly the message format our two <code>listen</code> processes are listening for.</p></li>
+            <li><p><code>listen</code> now receives a tuple containing our IEx process’s PID and a token, and sends its own tuple containing its own PID and the token back to the <code>sender</code> process, which in this case is IEx.</p></li>
+            <li><p>Back in <code>run</code>, after we send our messages off, we need to get ourselves ready to receive a response. For each of our listener processes, we create a <code>receive</code> block that listens for a tuple containing the matching PID and a token, and simply <code>puts</code> the token.</p></li>
+            <li><p>Since <code>run</code> has no explicit return value, it returns <code>:ok</code> upon completion</p></li>
+        </ol>
+
+        <p>Simple enough. But what’s with the two <code>receive</code> blocks at the end of <code>run</code>? Shouldn’t we be able to combine the two and have a single <code>receive</code> block with two match clauses? Let’s give that a try.</p>
+
+        <pre><code>defmodule Echo do
+  def listen do
+    receive do
+      {sender, token} -&gt; send sender, {self, token}
+    end
+  end
+
+  def run(token1, token2) do
+    pid1 = spawn(Echo, :listen, [])
+    pid2 = spawn(Echo, :listen, [])
+
+    send pid1, {self, token1}
+    send pid2, {self, token2}
+
+    receive do
+      {^pid1, token} -&gt; IO.puts token
+      {^pid2, token} -&gt; IO.puts token
+    end
+  end
+end
+        </code></pre>
+
+        <p>And we run it:</p>
+
+        <pre><code>iex&gt; r(Echo)
+[Echo]
+iex&gt; Echo.run(“Dear”, “Reader”)
+Dear
+:ok
+        </code></pre>
+
+        <p>What happened to the <code>Reader</code>? This was one of the first things it took me a little while to remember: any <code>receive</code> block only runs once. It’s listening to a potentially endless stream messages coming into the current process's mailbox), but once it receives a matching message, it’s done. We
+            can also demonstrate this by sending multiple messages to one of our <code>listen</code> processes:</p>
+
+        <pre><code>defmodule Echo do
+  def listen do
+    receive do
+      {sender, token} -&gt; send sender, {self, token}
+    end
+  end
+
+  def run(token1, token2) do
+    pid1 = spawn(Echo, :listen, [])
+    pid2 = spawn(Echo, :listen, [])
+
+    send pid1, {self, token1}
+    send pid1, {self, token1}
+    send pid2, {self, token2}
+
+    receive do
+      {^pid1, token} -&gt; IO.puts token
+    end
+    receive do
+      {^pid2, token} -&gt; IO.puts token
+    end
+  end
+end
+        </code></pre>
+
+        <p>And we run it:</p>
+
+        <pre><code>iex&gt; r(Echo)
+[Echo]
+iex&gt; Echo.run(“Dear”, “Reader”)
+Dear
+Reader
+:ok
+        </code></pre>
+
+        <p>We receive and print the first "Dear," but then that first <code>receive</code> is finished. We move on to the next one, but it doesn't match the first message in the process mailbox, which is another "Dear," so it goes on to the second one, which is "Reader," which matches, and the function terminates.</p>
+
+        <p>So we need a <code>receive</code> block to listen for each incoming message. And, if you run the code a number of times, you’ll see that the tokens are always printed in the same order. That’s because the receive blocks are processed in order. One waits until ti receives a message, then goes on to the next one. You can confirm this for yourself by switching their order in your code and running it. You should see that the second token is now always printed first.</p>
+
+        <p>This is all simple enough when we know we’ll only be receiving two messages. But out in the real world, it’s rare that we can predict this with any measure of reasonability. So let’s make <code>Echo</code> behave a bit more like a real piece of code might:</p>
+
+        <pre><code>defmodule Echo do
+  def listen do
+    receive do
+      {sender, token} -&gt; send sender, {self, token}
+    end
+  end
+
+
+  def run(tokens) do
+    pids = Enum.map(tokens, fn token -&gt; {spawn(Echo, :listen, []), token} end)
+    Enum.map(pids, fn {pid, token} -&gt; send pid, {self, token} end)
+
+    ...
+  end
+end
+        </code></pre>
+
+        <p>So far, so good, we can spawn the correct number of processes, and send a token to each one. But how do we make sure we’ll be listening for each response? One way is to continue using the Enum.map:</p>
+
+        <pre><code>defmodule Echo do
+  def listen do
+    receive do
+      {sender, token} -&gt; send sender, {self, token}
+    end
+  end
+
+  def run(tokens) do
+    pids = Enum.map(tokens, fn token -&gt; {spawn(Echo, :listen, []), token} end)
+    Enum.map(pids, fn {pid, token} -&gt; send pid, {self, token} end)
+
+    Enum.map(pids, fn {pid, token} -&gt;
+      receive do
+        {^pid, ^token} -&gt; IO.puts token
+      end
+    end)
+  end
+end
+        </code></pre>
+
+        <p>And we run it:</p>
+
+        <pre><code>iex&gt; r(Echo)
+iex&gt; Echo.run(["Wizard", "People", "Dear", "Reader"])
+Wizard
+People
+Dear
+Reader
+[:ok, :ok, :ok, :ok]
+        </code></pre>
+
+        <p>Ok, so this works, but let’s say we change <code>listen</code> to send a token twice?</p>
+
+        <pre><code>def listen
+  receive do
+    {sender, token} -&gt;
+      send(sender, {self, token})
+      send(sender, {self, token})
+    end
+  end
+end
+        </code></pre>
+
+        <p>Sure, we can just double the block in our last <code>Enum.map</code> call.</p>
+
+        <pre><code>Enum.map(pids, fn {pid, token} -&gt;
+  receive do
+    {^pid, ^token} -&gt; IO.puts token
+  end
+  receive do
+    {^pid, ^token} -&gt; IO.puts token
+  end
+end)
+        </code></pre>
+
+        <p>But even though it works, and is more or less acceptable because we’re dealing with a finite (and self-determined) number of calls, hopefully you can see that we are heading down a dangerous road here. Say we change <code>listen</code> to do this:</p>
+
+        <pre><code>def listen
+  receive do
+    {sender, token} -&gt;
+      x = :random.uniform(100)
+      for _ &lt;- 1..x, do: send(sender, {self, token})
+    end
+  end
+end
+        </code></pre>
+
+        <p>Now, for every PID we create, we need to listen for between 1 and 100 responses. The problem we’re facing is that every time a <code>receive</code> block matches, it’s done. It won’t be listening for the next matching message. But what if we could tell the <code>receive</code> block to keep listening after a match? Or, even better, what if we could tell the <code>receive</code> block to tell itself to keep listening after a match? Yes, that’s right, it’s time to pull out that old magic bullet and try not to shoot ourselves with it: recursion. And so:</p>
+
+        <pre><code>defmodule Echo do
+  def listen do
+    receive do
+      {sender, token} -&gt; send sender, {self, token}
+    end
+  end
+
+  def run(tokens) do
+    pids = Enum.map(tokens, fn token -&gt; {spawn(Echo, :listen, []), token} end)
+    Enum.map(pids, fn {pid, token} -&gt; send pid, {self, token} end)
+
+    start_receiving
+  end
+
+  def start_receiving do
+    receive do
+      {_pid, token} -&gt;
+        IO.puts token
+        start_receiving
+    end
+  end
+end
+        </code></pre>
+
+        <p>But wait, you might ask, won’t continuing to call <code>start_receiving</code> from inside itself blow up memory usage? (You may also be asking another question in addition to that one, but I'll get to that in a moment)</p>
+
+        <p>Normally, yes, but thanks to Elixir’s implementation of tail-call optimization (stay tuned for an entry on this in a hopefully continuing series of blogs posts about things I make use of but don’t understand), if the recursive call is the <em>VERY LAST THING</em> executed, "the runtime simply jumps back to the start of the function." <a href="https://pragprog.com/book/elixir12/programming-elixir-1-2">cit.</a> Here, <code>start_receiving</code> is the last call we make inside of <code>start_receiving</code>, so we’re good.</p>
+
+        <p>So let’s run that, and you’ll get something that looks like</p>
+
+        <pre><code>iex&gt; r(Echo)
+iex&gt; Echo.run(["wizard", "people", "dear", "reader"])
+reader
+wizard
+people
+dear
+reader
+        </code></pre>
+
+        <p>and then...</p>
+
+        <p>well, nothing. And this is the question you may have been asking before (and don’t worry if you weren’t. I certainly didn’t the first several times I tried to implement something like this). What’s happening is that every time <code>start_receiving</code> receives a matching message, it calls itself and starts listening again. And this includes when <code>start_receiving</code> receives the final message we’re sending it. It gets told to start receiving again, and it does. But nothing ever comes in.</p>
+
+        <p>"Hah!" you might say. "We should’ve configured <code>listen</code> to return the number of extra processes we spawned so that we could create exactly that many <code>receive</code> blocks. Then we wouldn’t have this problem."</p>
+
+        <p>And to you I say: No. Just. No.</p>
+
+        <p>Because I love you, and I want you to be happy in your coding. And Elixir feels the same way, and so has given us the <code>after</code> clause, which is what might be more familiarly called a timeout. It works like this:</p>
+
+        <pre><code>def start_receiving do
+    receive do
+        {_pid, token} -&gt;
+            IO.puts token
+            start_receiving
+    after
+        1000 -&gt; nil
+    end
+end
+        </code></pre>
+
+        <p>Here, if <code>start_receiving</code> doesn’t receive a matching message within 1 second, it will do what we’ve told it to do. Which, in this case, is nothing. The loop will end, and we’ll jump back into the <code>run</code> function, where <code>start_receiving</code> was the last call, and so the function will end. If we wanted, we could replace 1000 with a larger or smaller number, depending on how much latency we might expect. We can also use <code>0</code>, which will cause the loop to end as soon as there is no message to process.</p>
+
+        <p>Making that change and running your code, you'll get something that looks, at the end, like this:</p>
+
+        <pre><code>...
+wizard
+wizard
+wizard
+wizard
+people
+people
+people
+wizard
+dear
+dear
+wizard
+dear
+dear
+wizard
+reader
+reader
+reader
+reader
+people
+people
+people
+people
+dear
+dear
+dear
+dear
+reader
+reader
+reader
+people
+people
+people
+dear
+dear
+dear
+reader
+reader
+reader
+people
+people
+:ok
+        </code></pre>
+
+        <p>Ok, great, so we can listen for an arbitrary number of responses, and stop listening once we stop receiving messages. There’s one more thing to look at. You may have noticed, in the previous output example, that the responses weren’t necessarily coming back in order. There were some “Wizard” mixed in with the “People,” and some “Reader” mixed in with the “Dear”. Now, depending on the system you’re building, maybe that’s fine. Maybe it’s not important in what order the messages are received, just that they <em>are</em> received. But just for the sake of education, let’s say you did want this.</p>
+
+        <p>Let’s think back to our earlier example, where we were using the <code>^</code>-binding in the <code>receive</code> blocks to ensure a specific matching sending process. We got rid of this in <code>start_receiving</code> because we didn’t care about order, we just needed to match against a two-element tuple. So we need to get some of that logic back, but it would be a shame to give up this lovely recursion we’ve got going.</p>
+
+        <p>There may well be a better way to do this, but the best I’ve found is this particular combination of the two approaches. I’ll show you the code, then talk us through what’s going on:</p>
+
+        <pre><code>defmodule Echo do
+  def listen do
+    receive do
+      {sender, token} -&gt; send sender, {self, token}
+    end
+  end
+
+  def run(tokens) do
+    pids = Enum.map(tokens, fn token -&gt; {spawn(Echo, :listen, []), token} end)
+    Enum.map(pids, fn {pid, token} -&gt; send pid, {self, token} end)
+
+    Enum.map(pids, fn {pid, token} -&gt;
+      start_receiving(pid, token)
+    end)
+  end
+
+  def start_receiving(pid, token) do
+    receive do
+      {^pid, ^token} -&gt;
+        IO.puts token
+        start_receiving(pid, token)
+    end
+  end
+end
+        </code></pre>
+
+        <p>This loops through the pids we created and starts a recursive receiver listening for messages sent from that specific process. Because they are created in order, they will listen in order, and we see that the blocks of identical token <em>do</em> now appear grouped</p>
+
+        <pre><code>iex&gt; Echo.run([“wizard”, “people”, “dear”, “reader”])
+wizard
+wizard
+wizard
+wizard
+wizard
+wizard
+wizard
+people
+people
+people
+people
+people
+people
+people
+people
+people
+people
+people
+dear
+dear
+dear
+dear
+dear
+dear
+dear
+dear
+dear
+dear
+dear
+dear
+dear
+dear
+dear
+dear
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+reader
+:done
+        </code></pre>
+
+        <h3>:done</h3>
+
+    </body>
+</html>
