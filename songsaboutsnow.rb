@@ -6,7 +6,7 @@ class Songsaboutsnow < Sinatra::Base
   asset_map "/styles/application.css", ["assets/css/*.scss"]
   get "/" do
     @poetry_links = {
-      "One Sentence Poems (For a medical examiner on Orlando)" => "http://www.onesentencepoems.com/osp/michael-berkowitz-for-a-medical-examiner-in-orlando/",
+      "One Sentence Poems (For a medical examiner in Orlando)" => "http://www.onesentencepoems.com/osp/michael-berkowitz-for-a-medical-examiner-in-orlando/",
       "Persephone's Daughters" => "http://persephonesdaughters.tk/index.php/michael-berkowitz-three-poems/",
       "Jersey Devil Press" => "http://www.jerseydevilpress.com/?page_id=6885",
       "Bird's Thumb" => "http://birdsthumb.org/july-2015/2015/6/29/indian-summer",
