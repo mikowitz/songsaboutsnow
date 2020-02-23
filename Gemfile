@@ -1,7 +1,8 @@
 source 'https://rubygems.org'
-ruby '2.3.3'
+ruby '2.6.5'
 
-gem 'sinatra'
+gem 'ffi', '>= 1.9.24'
+gem 'sinatra', '>= 2.0.2'
 gem 'sinatra-asset-snack'
 
 gem 'haml'
