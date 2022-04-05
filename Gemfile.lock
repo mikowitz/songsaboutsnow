@@ -42,7 +42,7 @@ GEM
       yajl-ruby
     temple (0.8.2)
     tilt (2.0.10)
-    yajl-ruby (1.4.1)
+    yajl-ruby (1.4.2)
 
 PLATFORMS
   ruby
